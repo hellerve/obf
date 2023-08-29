@@ -6,7 +6,8 @@ Class {
 		'source',
 		'index',
 		'maxIdx',
-		'optimizing'
+		'optimizing',
+		'compiles'
 	],
 	#classInstVars : [
 		'uniqueInstance'
@@ -34,6 +35,7 @@ BrainfuckCompiler >> byteCodeMap [
 
 { #category : #accessing }
 BrainfuckCompiler >> compile: aString [
+	| compiledMethod |
 	gen := IRBuilder new.
 	source := optimizing
 			ifTrue: [ self optimizeInput: aString ]
@@ -43,8 +45,12 @@ BrainfuckCompiler >> compile: aString [
 	self setupGenerator.
 	self generate.
 	self finalizeGenerator.
+	
+	compiledMethod := gen ir compiledMethod.
+	
+	compiles add: (aString -> compiledMethod).
 
-	^ gen ir compiledMethod
+	^ compiledMethod
 ]
 
 { #category : #accessing }
@@ -63,6 +69,11 @@ BrainfuckCompiler >> computeIndex [
 			idx := idx + 1 ].
 
 	^ idx - 1
+]
+
+{ #category : #accessing }
+BrainfuckCompiler >> defaultText [
+	^ '++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.'
 ]
 
 { #category : #accessing }
@@ -228,8 +239,74 @@ BrainfuckCompiler >> getBlockSize [
 ]
 
 { #category : #accessing }
+BrainfuckCompiler >> gtActionOptimizeFor: anAction [
+	<gtAction>
+	^ anAction button
+		priority: 1;
+		icon: BrGlamorousVectorIcons performance;
+		tooltip: 'Toggle Optimizations';
+		action: [ optimizing
+				ifTrue: [ self disableOptimizations ]
+				ifFalse: [ self enableOptimizations ] ]
+]
+
+{ #category : #accessing }
+BrainfuckCompiler >> gtCompileFor: aView [
+	<gtView>
+	^ aView textEditor
+		title: 'Compile';
+		priority: 1;
+		text: [ self defaultText ];
+		actionButtonIcon: BrGlamorousIcons inspect
+			action: [ :aButton :aTab | 
+				| aTabGroup anEditor |
+				aTabGroup := aTab
+						withAllParentsDetect: [ :aParent | aParent isKindOf: BrTabGroup ]
+						ifFound: #yourself
+						ifNone: [ nil ].
+				anEditor := aTabGroup
+						allChildrenBreadthFirstDetect: [ :anElement | anElement isKindOf: BrEditor ]
+						ifFound: #yourself.
+				aButton phlow spawnObject: (self compile: anEditor text asString) ];
+		actionButtonIcon: BrGlamorousIcons play
+			action: [ :aButton :aTab | 
+				| aTabGroup anEditor |
+				aTabGroup := aTab
+						withAllParentsDetect: [ :aParent | aParent isKindOf: BrTabGroup ]
+						ifFound: #yourself
+						ifNone: [ nil ].
+				anEditor := aTabGroup
+						allChildrenBreadthFirstDetect: [ :anElement | anElement isKindOf: BrEditor ]
+						ifFound: #yourself.
+				aButton phlow
+					spawnObject: ((self compile: anEditor text asString) valueWithReceiver: self arguments: #()) ];
+		aptitude: [ BrGlamorousCodeEditorAptitude ]
+]
+
+{ #category : #accessing }
+BrainfuckCompiler >> gtCompilesFor: aView [
+	<gtView>
+	^ aView columnedList
+		title: 'Historical Compiles';
+		priority: 2;
+		items: [ compiles ];
+		column: 'Input' text: #key;
+		column: 'Result' text: #value;
+		column: 'Run'
+			stencil: [ :aCompile | 
+				BrButton new
+					aptitude: BrGlamorousButtonWithIconAptitude;
+					icon: BrGlamorousVectorIcons play;
+					action: [ :aButton | 
+						aButton phlow
+							spawnObject: (aCompile value valueWithReceiver: self arguments: #()) ] ];
+		send: #value
+]
+
+{ #category : #accessing }
 BrainfuckCompiler >> initialize [
-	optimizing := false
+	optimizing := false.
+	compiles := OrderedCollection new
 ]
 
 { #category : #accessing }

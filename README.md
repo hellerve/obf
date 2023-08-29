@@ -1,7 +1,12 @@
 # obf
 
 An optimizing compiler for Brainfuck in Pharo. Compiles to Pharo VM bytecode.
-## Usage
+## Usage 
+The easiest access to the compiler is done by accessing the (Glamorous Toolkit) views just by getting a live instance:
+```
+BrainfuckCompiler new
+```
+
 You can generate compiled code like this:
 ```smalltalk
 "a regular compile"
