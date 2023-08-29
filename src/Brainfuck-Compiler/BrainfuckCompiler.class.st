@@ -35,7 +35,9 @@ BrainfuckCompiler >> byteCodeMap [
 { #category : #accessing }
 BrainfuckCompiler >> compile: aString [
 	gen := IRBuilder new.
-	source := aString.
+	source := optimizing
+			ifTrue: [ self optimizeInput: aString ]
+			ifFalse: [ aString ].
 	index := 1.
 
 	self setupGenerator.
@@ -61,6 +63,16 @@ BrainfuckCompiler >> computeIndex [
 			idx := idx + 1 ].
 
 	^ idx - 1
+]
+
+{ #category : #accessing }
+BrainfuckCompiler >> disableOptimizations [
+	optimizing := false
+]
+
+{ #category : #accessing }
+BrainfuckCompiler >> enableOptimizations [
+	optimizing := true
 ]
 
 { #category : #accessing }
@@ -229,7 +241,7 @@ BrainfuckCompiler >> optimizations [
 ]
 
 { #category : #accessing }
-BrainfuckCompiler >> optimize: aString [
+BrainfuckCompiler >> optimizeInput: aString [
 	|res|
 	res := aString.
 	
@@ -238,12 +250,6 @@ BrainfuckCompiler >> optimize: aString [
 	].
 	
 	^ res
-]
-
-{ #category : #accessing }
-BrainfuckCompiler >> optimizeAndCompile: aString [
-	optimizing := true.
-	^ self compile: (self optimize: aString)
 ]
 
 { #category : #accessing }
