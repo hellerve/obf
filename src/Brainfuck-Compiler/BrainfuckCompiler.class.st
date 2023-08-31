@@ -165,11 +165,10 @@ BrainfuckCompiler >> genPeriod: aNumber [
 				send: #at:;
 				storeTemp: #val;
 				popTop;
-				pushLiteralVariable: GtTranscript binding;
-				send: #default;
+				pushLiteralVariable: (self class environment associationAt: #Transcript);
 				pushTemp: #val;
 				send: #asCharacter;
-				send: #nextPut:;
+				send: #show:;
 				popTop ]
 ]
 
